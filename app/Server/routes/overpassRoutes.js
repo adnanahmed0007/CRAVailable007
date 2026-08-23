@@ -1,8 +1,14 @@
 import express from "express";
-import { getOverpassData } from "../controllers/overpassController.js";
+
+import {
+    getOverpassData,
+} from "../controllers/overpassController.js";
 
 const router = express.Router();
 
-router.post("/overpass", getOverpassData);
+router.post(
+    "/overpass",
+    getOverpassData
+);
 
 export default router;
