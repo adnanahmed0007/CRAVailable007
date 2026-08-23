@@ -134,7 +134,7 @@ const NearbyHospitals = () => {
   const [locating, setLocating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
-  const [radius, setRadius] = useState(10000);
+  const [radius, setRadius] = useState(50000);
   const [selectedId, setSelectedId] = useState(null);
 
 
@@ -250,7 +250,7 @@ const NearbyHospitals = () => {
     hospitalMarkersRef.current = [];
 
     try {
-      const query = `[out:json][timeout:25];
+      const query = `[out:json][timeout:60];
         (
           node["amenity"="hospital"](around:${radius},${userLocation.lat},${userLocation.lng});
           way["amenity"="hospital"](around:${radius},${userLocation.lat},${userLocation.lng});
