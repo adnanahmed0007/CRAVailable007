@@ -1,63 +1,64 @@
 import axios from "axios";
 
 const OVERPASS_SERVERS = [
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
 ];
 
 export const getOverpassData = async (req, res) => {
-    try {
-        const { query } = req.body;
+    const { query } = req.body;
 
-        console.log("========== OVERPASS REQUEST ==========");
-        console.log("Query received:", query);
+    console.log("========== OVERPASS REQUEST ==========");
+    console.log("Query received:");
+    console.log(query);
 
-        if (!query) {
-            return res.status(400).json({
-                success: false,
-                message: "Overpass query is required",
-            });
-        }
+    if (!query) {
+        return res.status(400).json({
+            success: false,
+            message: "Overpass query is required",
+        });
+    }
 
-        const params = new URLSearchParams();
-        params.append("data", query);
+    const errors = [];
 
-        let lastError = null;
+    for (const server of OVERPASS_SERVERS) {
+        try {
+            console.log("\n=================================");
+            console.log("Trying:", server);
+            console.log("=================================");
 
-        for (const server of OVERPASS_SERVERS) {
-            try {
-                console.log("========================================");
-                console.log("Trying Overpass server:");
-                console.log(server);
+            const response = await axios.post(
+                server,
+                new URLSearchParams({
+                    data: query,
+                }).toString(),
+                {
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded",
+                        Accept: "application/json",
+                        "User-Agent":
+                            "CRAvailable/1.0 (hospital finder)",
+                    },
+                    timeout: 120000,
+                    validateStatus: () => true,
+                }
+            );
 
-                const response = await axios.post(
-                    server,
-                    params.toString(),
-                    {
-                        headers: {
-                            "Content-Type":
-                                "application/x-www-form-urlencoded",
-                            Accept: "application/json",
-                            "User-Agent":
-                                "CRAvailable/1.0",
-                        },
+            console.log("STATUS:", response.status);
 
-                        timeout: 90000,
-                    }
-                );
+            console.log(
+                "CONTENT TYPE:",
+                response.headers["content-type"]
+            );
 
+            if (response.status >= 200 && response.status < 300) {
                 console.log(
                     "========== OVERPASS SUCCESS =========="
                 );
 
                 console.log(
-                    "Server:",
-                    server
-                );
-
-                console.log(
-                    "Elements received:",
+                    "Elements:",
                     response.data?.elements?.length || 0
                 );
 
@@ -65,65 +66,58 @@ export const getOverpassData = async (req, res) => {
                     success: true,
                     data: response.data,
                 });
-
-            } catch (error) {
-                lastError = error;
-
-                console.error(
-                    "========== OVERPASS SERVER FAILED =========="
-                );
-
-                console.error(
-                    "Server:",
-                    server
-                );
-
-                console.error(
-                    "Message:",
-                    error.message
-                );
-
-                console.error(
-                    "Status:",
-                    error.response?.status
-                );
-
-                console.error(
-                    "Response:",
-                    error.response?.data
-                );
-
-                console.log(
-                    "Trying next Overpass server..."
-                );
             }
+
+            console.error(
+                "========== OVERPASS SERVER ERROR =========="
+            );
+
+            console.error("Server:", server);
+            console.error("Status:", response.status);
+            console.error("Response:", response.data);
+
+            errors.push({
+                server,
+                status: response.status,
+                response:
+                    typeof response.data === "string"
+                        ? response.data.substring(0, 1000)
+                        : response.data,
+            });
+
+        } catch (error) {
+            console.error(
+                "========== OVERPASS REQUEST ERROR =========="
+            );
+
+            console.error("Server:", server);
+            console.error("Message:", error.message);
+            console.error("Code:", error.code);
+            console.error(
+                "Status:",
+                error.response?.status
+            );
+            console.error(
+                "Response:",
+                error.response?.data
+            );
+
+            errors.push({
+                server,
+                status: error.response?.status || null,
+                message: error.message,
+                code: error.code || null,
+            });
         }
-
-        console.error(
-            "========== ALL OVERPASS SERVERS FAILED =========="
-        );
-
-        return res.status(502).json({
-            success: false,
-            message:
-                "All Overpass API servers are currently unavailable.",
-            error:
-                lastError?.response?.data ||
-                lastError?.message ||
-                "Unknown Overpass error",
-        });
-
-    } catch (error) {
-        console.error(
-            "========== BACKEND ERROR =========="
-        );
-
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message,
-        });
     }
+
+    console.error(
+        "========== ALL OVERPASS SERVERS FAILED =========="
+    );
+
+    return res.status(502).json({
+        success: false,
+        message: "All Overpass API servers failed",
+        errors,
+    });
 };
