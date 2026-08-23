@@ -3,6 +3,7 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import overpassRoutes from "./routes/overpassRoutes.js";
 
 import router from "./routes/Authentication/Authe.js";
 import routerDonation from "./routes/Service/DonationRoutes.js";
@@ -40,6 +41,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/auth/api", router);
 app.use("/auth/dontaion/api", routerDonation);
+app.use("/api", overpassRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "✅ Server is running" });
