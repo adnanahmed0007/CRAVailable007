@@ -55,7 +55,7 @@ const Profile = () => {
         const fetchProfile = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:9090/auth/api/profile",
+                    "https://cravailable007.onrender.com/auth/api/profile",
                     { withCredentials: true }
                 );
                 setProfile(res.data);

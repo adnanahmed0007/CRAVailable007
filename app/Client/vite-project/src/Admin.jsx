@@ -8,7 +8,7 @@ import {
     MessageSquare, User, UserPlus, Lock, Plus
 } from "lucide-react";
 
-const API_BASE = "http://localhost:9090";
+const API_BASE = "https://cravailable007.onrender.com";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const BloodBadge = ({ group }) => {
     const colors = {

@@ -20,7 +20,7 @@ const Logout = () => {
             setMessage("");
 
             const res = await axios.get(
-                `http://localhost:9090/auth/api/logout`,
+                `https://cravailable007.onrender.com/auth/api/logout`,
                 {
                     withCredentials: true,
                 }

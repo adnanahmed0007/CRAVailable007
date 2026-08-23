@@ -28,7 +28,7 @@ const App = () => {
     const checkSession = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:9090/auth/api/me",
+          "https://cravailable007.onrender.com/auth/api/me",
           { withCredentials: true }
         );
         if (res.data.loggedIn) {

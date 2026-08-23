@@ -6,7 +6,7 @@ import {
     Lock, AlertCircle, MapPin, Clock, User
 } from "lucide-react";
 
-const BASE_URL = "http://localhost:9090/auth";
+const BASE_URL = "https://cravailable007.onrender.com/auth";
 
 // Blood group badge — same as SearchValue
 const BloodBadge = ({ group }) => (

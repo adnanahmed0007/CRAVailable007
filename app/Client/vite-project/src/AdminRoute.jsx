@@ -19,7 +19,7 @@ const AdminRoute = ({ children }) => {
     const checkRole = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:9090/auth/api/profile",
+          " https://cravailable007.onrender.com/auth/api/profile",
           { withCredentials: true }
         );
         setStatus(res.data?.role === "admin" ? "allowed" : "denied");
