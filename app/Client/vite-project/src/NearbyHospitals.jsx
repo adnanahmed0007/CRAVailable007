@@ -115,9 +115,7 @@ const RADIUS_OPTIONS = [
   },
 ];
 
-// ============================================================
-// COMPONENT
-// ============================================================
+
 
 const NearbyHospitals = () => {
   const navigate = useNavigate();
@@ -134,7 +132,7 @@ const NearbyHospitals = () => {
   const [locating, setLocating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
-  const [radius, setRadius] = useState(50000);
+  const [radius, setRadius] = useState(5000);
   const [selectedId, setSelectedId] = useState(null);
 
 
@@ -251,12 +249,14 @@ const NearbyHospitals = () => {
 
     try {
       const query = `[out:json][timeout:60];
-        (
-          node["amenity"="hospital"](around:${radius},${userLocation.lat},${userLocation.lng});
-          way["amenity"="hospital"](around:${radius},${userLocation.lat},${userLocation.lng});
-          relation["amenity"="hospital"](around:${radius},${userLocation.lat},${userLocation.lng});
+      (
+        nwr["amenity"="hospital"](
+          around:${radius},
+          ${userLocation.lat},
+          ${userLocation.lng}
         );
-        out center tags;`;
+      );
+      out center tags;`;
 
 
       const res = await fetch(
