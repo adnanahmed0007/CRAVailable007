@@ -16,8 +16,8 @@ app.set("trust proxy", 1);
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://blooddonatio2-9.vercel.app",
-  "https://blooddonatio2-9-a443.vercel.app",
+  "https://cra-vailable007.vercel.app",
+
 
 ];
 
