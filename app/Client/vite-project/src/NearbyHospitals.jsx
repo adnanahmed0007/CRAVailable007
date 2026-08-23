@@ -20,9 +20,6 @@ import {
 
 import { useTheme } from "./ThemeContext";
 
-// ============================================================
-// LEAFLET DEFAULT MARKER
-// ============================================================
 
 const defaultIcon = L.icon({
   iconUrl: icon,
@@ -36,9 +33,7 @@ const defaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = defaultIcon;
 
-// ============================================================
-// USER LOCATION ICON
-// ============================================================
+
 
 const userIcon = L.divIcon({
   className: "",
@@ -58,9 +53,6 @@ const userIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-// ============================================================
-// HOSPITAL ICON
-// ============================================================
 
 const hospitalIcon = L.divIcon({
   className: "",
@@ -87,9 +79,7 @@ const hospitalIcon = L.divIcon({
   popupAnchor: [0, -15],
 });
 
-// ============================================================
-// HAVERSINE DISTANCE
-// ============================================================
+
 
 const distanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -108,9 +98,7 @@ const distanceKm = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-// ============================================================
-// RADIUS OPTIONS
-// ============================================================
+
 
 const RADIUS_OPTIONS = [
   {
@@ -149,9 +137,7 @@ const NearbyHospitals = () => {
   const [radius, setRadius] = useState(10000);
   const [selectedId, setSelectedId] = useState(null);
 
-  // ============================================================
-  // INITIALIZE MAP
-  // ============================================================
+
 
   useEffect(() => {
     if (mapRef.current || !mapDivRef.current) return;
@@ -170,9 +156,8 @@ const NearbyHospitals = () => {
     };
   }, []);
 
-  // ============================================================
-  // CHANGE MAP THEME
-  // ============================================================
+
+
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -193,9 +178,7 @@ const NearbyHospitals = () => {
     }).addTo(mapRef.current);
   }, [theme]);
 
-  // ============================================================
-  // LOCATE USER
-  // ============================================================
+
 
   const locateMe = () => {
     setError("");
@@ -226,12 +209,9 @@ const NearbyHospitals = () => {
             mapRef.current.removeLayer(userMarkerRef.current);
           }
 
-          userMarkerRef.current = L.marker(
-            [loc.lat, loc.lng],
-            {
-              icon: userIcon,
-            }
-          )
+          userMarkerRef.current = L.marker([loc.lat, loc.lng], {
+            icon: userIcon,
+          })
             .addTo(mapRef.current)
             .bindPopup("You are here");
         }
@@ -254,9 +234,7 @@ const NearbyHospitals = () => {
     );
   };
 
-  // ============================================================
-  // SEARCH HOSPITALS
-  // ============================================================
+
 
   const searchHospitals = async () => {
     if (!userLocation) return;
@@ -280,11 +258,17 @@ const NearbyHospitals = () => {
         );
         out center tags;`;
 
+
       const res = await fetch(
-        "https://overpass-api.de/api/interpreter",
+        "https://cravailable007.onrender.com/api/overpass",
         {
           method: "POST",
-          body: query,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: query,
+          }),
         }
       );
 
@@ -292,7 +276,16 @@ const NearbyHospitals = () => {
         throw new Error("Search failed");
       }
 
-      const data = await res.json();
+
+      const responseData = await res.json();
+
+      if (!responseData.success) {
+        throw new Error(
+          responseData.message || "Overpass search failed"
+        );
+      }
+
+      const data = responseData.data;
 
       const results = (data.elements || [])
         .map((el) => {
@@ -344,17 +337,11 @@ const NearbyHospitals = () => {
 
       setHospitals(results);
 
-      // ========================================================
-      // ADD HOSPITAL MARKERS
-      // ========================================================
 
       results.forEach((h) => {
-        const marker = L.marker(
-          [h.lat, h.lng],
-          {
-            icon: hospitalIcon,
-          }
-        )
+        const marker = L.marker([h.lat, h.lng], {
+          icon: hospitalIcon,
+        })
           .addTo(mapRef.current)
           .bindPopup(
             `<b>${h.name}</b><br/>${h.distance.toFixed(
@@ -385,9 +372,7 @@ const NearbyHospitals = () => {
     }
   };
 
-  // ============================================================
-  // SEARCH WHEN LOCATION/RADIUS CHANGES
-  // ============================================================
+
 
   useEffect(() => {
     if (userLocation) {
@@ -397,9 +382,7 @@ const NearbyHospitals = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLocation, radius]);
 
-  // ============================================================
-  // SELECT HOSPITAL
-  // ============================================================
+
 
   const selectHospital = (h) => {
     navigate("/donate", {
@@ -413,18 +396,14 @@ const NearbyHospitals = () => {
     });
   };
 
-  // ============================================================
-  // RETURN
-  // ============================================================
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50 dark:from-[#050d18] dark:via-[#091525] dark:to-[#0b1b30] px-4 py-10 transition-colors duration-300">
 
       <div className="max-w-6xl mx-auto">
 
-        {/* ====================================================== */}
-        {/* HEADER */}
-        {/* ====================================================== */}
+
 
         <div className="text-center mb-8">
 
@@ -443,15 +422,13 @@ const NearbyHospitals = () => {
           </p>
         </div>
 
-        {/* ====================================================== */}
-        {/* CONTROL CARD */}
-        {/* ====================================================== */}
+
 
         <div className="bg-white/80 dark:bg-[#0d1b2e]/90 backdrop-blur-lg rounded-3xl shadow-xl border border-gray-200 dark:border-[#1e3a5f] p-4 md:p-6 mb-6 transition-all duration-300">
 
           <div className="flex flex-wrap items-center gap-3 justify-between">
 
-            {/* LOCATE BUTTON */}
+
 
             <button
               onClick={locateMe}
@@ -482,9 +459,7 @@ const NearbyHospitals = () => {
                 {RADIUS_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() =>
-                      setRadius(opt.value)
-                    }
+                    onClick={() => setRadius(opt.value)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${radius === opt.value
                       ? "bg-white dark:bg-[#1b3b5c] text-red-600 dark:text-red-400 shadow"
                       : "text-gray-500 dark:text-[#8faeca] hover:text-blue-600 dark:hover:text-blue-300"
@@ -506,7 +481,6 @@ const NearbyHospitals = () => {
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
 
               <span>{error}</span>
-
             </div>
           )}
         </div>
@@ -533,9 +507,7 @@ const NearbyHospitals = () => {
 
           </div>
 
-          {/* ==================================================== */}
-          {/* HOSPITAL LIST */}
-          {/* ==================================================== */}
+
 
           <div className="lg:col-span-2 bg-white/80 dark:bg-[#0d1b2e]/90 backdrop-blur-lg rounded-3xl shadow-xl border border-gray-200 dark:border-[#1e3a5f] p-5 max-h-[560px] overflow-y-auto transition-all duration-300">
 
@@ -555,9 +527,7 @@ const NearbyHospitals = () => {
 
             </h2>
 
-            {/* ================================================== */}
             {/* SEARCHING */}
-            {/* ================================================== */}
 
             {searching && (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400 dark:text-[#7695b2]">
@@ -571,27 +541,22 @@ const NearbyHospitals = () => {
               </div>
             )}
 
-            {/* ================================================== */}
             {/* NO LOCATION */}
-            {/* ================================================== */}
 
-            {!searching &&
-              !userLocation && (
-                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+            {!searching && !userLocation && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
 
-                  <Navigation className="w-10 h-10 text-gray-300 dark:text-[#456986]" />
+                <Navigation className="w-10 h-10 text-gray-300 dark:text-[#456986]" />
 
-                  <p className="text-sm text-gray-400 dark:text-[#7695b2] max-w-xs">
-                    Tap "Use My Location" above to
-                    see hospitals near you on the map.
-                  </p>
+                <p className="text-sm text-gray-400 dark:text-[#7695b2] max-w-xs">
+                  Tap "Use My Location" above to
+                  see hospitals near you on the map.
+                </p>
 
-                </div>
-              )}
+              </div>
+            )}
 
-            {/* ================================================== */}
             {/* NO HOSPITALS */}
-            {/* ================================================== */}
 
             {!searching &&
               userLocation &&
@@ -608,9 +573,7 @@ const NearbyHospitals = () => {
                 </div>
               )}
 
-            {/* ================================================== */}
             {/* HOSPITALS */}
-            {/* ================================================== */}
 
             <div className="space-y-3">
 
@@ -690,9 +653,6 @@ const NearbyHospitals = () => {
           </div>
         </div>
 
-        {/* ====================================================== */}
-        {/* FOOTER */}
-        {/* ====================================================== */}
 
         <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-[#6485a3]">
 
@@ -705,9 +665,6 @@ const NearbyHospitals = () => {
 
       </div>
 
-      {/* ======================================================== */}
-      {/* DARK BLUE MAP CSS */}
-      {/* ======================================================== */}
 
       <style>{`
 
