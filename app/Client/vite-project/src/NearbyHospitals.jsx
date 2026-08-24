@@ -352,26 +352,20 @@ const NearbyHospitals = () => {
 
     try {
       // ========================================================
-      // OVERPASS QUERY
-      // ========================================================
-
-      const query = `[out:json][timeout:60];
-nwr["amenity"="hospital"](
-  around:${radius},
-  ${userLocation.lat},
-  ${userLocation.lng}
-);
-out center tags;`;
-
-      console.log(
-        "========== OVERPASS QUERY =========="
-      );
-
-      console.log(query);
-
-      // ========================================================
       // CALL YOUR RENDER BACKEND
       // ========================================================
+      // The backend now uses Geoapify Places API.
+      // Send coordinates and radius directly. No Overpass query.
+
+      console.log(
+        "========== GEOAPIFY REQUEST =========="
+      );
+
+      console.log({
+        latitude: userLocation.lat,
+        longitude: userLocation.lng,
+        radius,
+      });
 
       const res = await fetch(
         "https://cravailable007.onrender.com/api/overpass",
@@ -384,7 +378,9 @@ out center tags;`;
           },
 
           body: JSON.stringify({
-            query: query,
+            latitude: userLocation.lat,
+            longitude: userLocation.lng,
+            radius: radius,
           }),
         }
       );
@@ -397,7 +393,7 @@ out center tags;`;
         await res.json();
 
       console.log(
-        "========== BACKEND RESPONSE =========="
+        "========== GEOAPIFY BACKEND RESPONSE =========="
       );
 
       console.log(responseData);
@@ -418,119 +414,92 @@ out center tags;`;
       // BACKEND ERROR
       // ========================================================
 
-      if (
-        !responseData.success
-      ) {
+      if (!responseData.success) {
         throw new Error(
           responseData.message ||
-          "Overpass search failed"
+          "Geoapify hospital search failed"
         );
       }
 
       // ========================================================
-      // GET ELEMENTS
+      // GET HOSPITALS
       // ========================================================
 
-      const elements =
-        responseData.data
-          ?.elements || [];
+      const hospitalsData =
+        responseData.hospitals ||
+        responseData.data?.elements ||
+        [];
 
       console.log(
-        "TOTAL HOSPITAL ELEMENTS:",
-        elements.length
+        "TOTAL HOSPITALS:",
+        hospitalsData.length
       );
 
       // ========================================================
-      // CONVERT OVERPASS DATA
+      // NORMALIZE GEOAPIFY DATA
       // ========================================================
 
-      const results = elements
-        .map((el) => {
-          // Nodes have:
-          // el.lat
-          // el.lon
+      const results = hospitalsData
+        .map((hospital) => {
+          const lat = Number(
+            hospital.latitude ??
+            hospital.lat
+          );
 
-          // Ways/relations with center output have:
-          // el.center.lat
-          // el.center.lon
-
-          const lat =
-            el.lat ??
-            el.center?.lat;
-
-          const lng =
-            el.lon ??
-            el.center?.lon;
-
-          // IMPORTANT:
-          // Do NOT use !lat || !lng
-          // because we want a proper null check.
+          const lng = Number(
+            hospital.longitude ??
+            hospital.lng ??
+            hospital.lon
+          );
 
           if (
-            lat == null ||
-            lng == null
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng)
           ) {
             return null;
           }
 
-          const tags =
-            el.tags || {};
-
-          // ====================================================
-          // ADDRESS
-          // ====================================================
-
-          const addressParts = [
-            tags["addr:housenumber"],
-            tags["addr:street"],
-            tags["addr:suburb"],
-            tags["addr:neighbourhood"],
-            tags["addr:city"],
-            tags["addr:district"],
-            tags["addr:state"],
-          ].filter(Boolean);
-
-          const address =
-            tags["addr:full"] ||
-            addressParts.join(
-              ", "
-            ) ||
-            "Address not available";
-
-          // ====================================================
-          // RETURN HOSPITAL
-          // ====================================================
+          const distance =
+            distanceKm(
+              userLocation.lat,
+              userLocation.lng,
+              lat,
+              lng
+            );
 
           return {
-            id: `${el.type}-${el.id}`,
+            id:
+              hospital.id ||
+              `${lat}-${lng}`,
 
             name:
-              tags.name ||
-              tags["name:en"] ||
+              hospital.name ||
               "Unnamed Hospital",
 
-            lat: Number(lat),
+            lat,
 
-            lng: Number(lng),
+            lng,
 
-            address,
+            address:
+              hospital.address ||
+              "Address not available",
 
             phone:
-              tags.phone ||
-              tags["contact:phone"] ||
+              hospital.phone ||
               "",
 
             emergency:
-              tags.emergency ===
-              "yes",
+              hospital.emergency === true,
 
-            distance:
-              distanceKm(
-                userLocation.lat,
-                userLocation.lng,
-                Number(lat),
-                Number(lng)
-              ),
+            distance,
+
+            website:
+              hospital.website ||
+              "",
+
+            category:
+              hospital.category ||
+              [],
           };
         })
         .filter(Boolean)
@@ -547,6 +516,7 @@ out center tags;`;
 
       // ========================================================
       // SAVE HOSPITALS
+      // ========================================================
       // ========================================================
 
       setHospitals(results);
@@ -1027,10 +997,9 @@ out center tags;`;
 
           <ChevronRight className="w-3 h-3" />
 
-          Hospital data via OpenStreetMap /
-          Overpass API. Always call ahead
-          to confirm blood donation
-          availability.
+          Hospital data powered by Geoapify.
+          Always call ahead to confirm blood
+          donation availability.
 
         </div>
 

@@ -68,7 +68,7 @@ const Signup = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:9090/auth/api/signup`,
+        `https://cravailable007.onrender.com/auth/api/signup`,
         formData,
         {
           withCredentials: true,
