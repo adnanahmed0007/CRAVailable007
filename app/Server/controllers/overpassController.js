@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const OVERPASS_SERVERS = [
-    "https://overpass.private.coffee/api/interpreter",
     "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.nchc.org.tw/api/interpreter",
 ];
-
 export const getOverpassData = async (req, res) => {
     const { query } = req.body;
 
